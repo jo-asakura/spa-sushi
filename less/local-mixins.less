@@ -1,0 +1,161 @@
+﻿@borderRadius: 2px;
+
+//
+.button-base()
+{
+    .border-radius(@borderRadius);
+    cursor: pointer;
+    margin: 0;
+    overflow: hidden;
+    padding: 8px 18px;
+    text-align: center;
+    text-decoration: none;
+    white-space: nowrap;
+}
+
+.button-color(@bgColor, @bgColorActive)
+{
+    background: @bgColor;
+
+    &:visited
+    {
+        background: @bgColor;
+    }
+
+    &:hover,
+    &:focus
+    {
+        background: @bgColorActive;
+        cursor: pointer;
+    }
+
+    &.disabled
+    {
+        &:hover,
+        &:focus
+        {
+            background: @bgColor;
+            cursor: default;
+        }
+    }
+}
+
+.button(red)
+{
+    .button-color(@colorAlizarin, @colorPomegranate);
+}
+
+.button(green)
+{
+    .button-color(@colorTurquoise, @colorGreenSea);
+}
+
+.button(blue)
+{
+    .button-color(@colorPeterRiver, @colorBelizeHole);
+}
+
+.button-default
+{
+    .button-base();
+    .transition(background @transitionDefault);
+    border: none;
+    color: @colorWhite;
+
+    &:visited
+    {
+        color: @colorClouds;
+    }
+
+    &:hover,
+    &:focus
+    {
+        color: @colorClouds;
+    }
+}
+
+//
+.button-switch-default
+{
+    .button-base();
+    .display-inline();
+    border: 1px solid @colorConcrete;
+    color: @colorConcrete;
+
+    &:hover,
+    &.hover
+    {
+        background: @colorBelizeHole;
+        border-color: @colorBelizeHole;
+        color: @colorClouds;
+    }
+
+    &.active
+    {
+        background: @colorPeterRiver;
+        border-color: @colorPeterRiver;
+        color: @colorClouds;
+    }
+
+    &.disabled
+    {
+        background: @colorClouds;
+        cursor: default;
+
+        &:hover,
+        &.hover
+        {
+            background: @colorClouds;
+            color: inherit;
+        }
+    }
+}
+
+//
+.input-default
+{
+    .border-radius(@borderRadius);
+    .transition(border-color @transitionDefault);
+    border: 1px solid @colorSilver;
+    color: @colorWetAsphalt;
+    margin: 0;
+    padding: 6px 5px 5px;
+    text-align: left;
+
+    &:hover,
+    &:active
+    {
+        border-color: @colorConcrete;
+    }
+}
+
+//
+.select-default
+{
+    .border-radius(@borderRadius);
+    .transition(border-color @transitionDefault);
+    border: 1px solid @colorSilver;
+    color: @colorWetAsphalt;
+    margin: 0;
+    padding: 5px 5px 4px;
+    text-align: left;
+
+    &:hover,
+    &:active
+    {
+        border-color: @colorConcrete;
+    }
+}
+
+//
+.checkbox-default
+{
+    margin-right: 5px;
+}
+
+//
+.error-msg
+{
+    color: @colorAlizarin;
+    text-align: left;
+}

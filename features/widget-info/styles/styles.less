@@ -1,0 +1,39 @@
+html
+{
+    .info
+    {
+        cursor: default;
+
+        .highlight
+        {
+            color: @colorPeterRiver;
+            cursor: pointer;
+        }
+    }
+
+    &[data-page="about"]
+    {
+        .info
+        {
+            font-weight: bold;
+
+            .highlight.clicked
+            {
+                color: @colorAlizarin;
+            }
+        }
+    }
+
+    &[data-page="contact"]
+    {
+        .info
+        {
+            font-style: italic;
+
+            .highlight.clicked
+            {
+                color: @colorAmethyst;
+            }
+        }
+    }
+}

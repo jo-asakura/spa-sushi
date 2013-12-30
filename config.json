@@ -1,0 +1,6 @@
+﻿{
+    "appName": "SPA Sushi",
+    "logServer": "log/server-log.log",
+    "logErrors": "log/error.log",
+    "logTracking": "log/action.log"
+}

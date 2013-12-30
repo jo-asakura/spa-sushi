@@ -1,0 +1,28 @@
+{
+    "name": "Dashboard",
+    "private": true,
+    "description": "The Dashboard",
+    "dependencies": {
+        "underscore": "*",
+        "hogan.js": "*",
+        "eventemitter2": "*",
+        "nodeject": "*",
+        "express": "*",
+        "consolidate": "*",
+        "director": "*",
+        "winston": "*",
+        "async": "*"
+    },
+    "devDependencies": {
+        "grunt": "*",
+        "grunt-browserify": "*",
+        "grunt-contrib-htmlmin": "*",
+        "grunt-contrib-hogan": "*",
+        "grunt-contrib-less": "*",
+        "grunt-contrib-watch": "*",
+        "grunt-contrib-concat": "*",
+        "grunt-contrib-uglify": "*",
+        "grunt-nodemon": "*",
+        "grunt-forever": "*"
+    }
+}

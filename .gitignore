@@ -1,0 +1,9 @@
+# User-specific files
+.idea/
+
+# Build results
+build/
+log/
+
+# NPM Directory
+node_modules/

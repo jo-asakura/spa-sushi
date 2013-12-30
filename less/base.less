@@ -1,0 +1,72 @@
+﻿// Base styles
+// ---
+
+// Define main font of the application - Lato
+// ---
+@fontLatoPath: ~'@{pathFont}/Lato';
+.font-face('Lato-Regular-webfont', 'Lato', normal, normal, @fontLatoPath);
+.font-face('Lato-RegularItalic-webfont', 'Lato', normal, italic, @fontLatoPath);
+.font-face('Lato-Bold-webfont', 'Lato', bold, normal, @fontLatoPath);
+.font-face('Lato-BoldItalic-webfont', 'Lato', bold, italic, @fontLatoPath);
+.font-face('Lato-Light-webfont', 'Lato-Light', normal, normal, @fontLatoPath);
+.font-face('Lato-Hairline-webfont', 'Lato-Hairline', normal, normal, @fontLatoPath);
+.font-face('Lato-Black-webfont', 'Lato-Black', normal, normal, @fontLatoPath);
+
+// Define font-based icons
+// ---
+@fontEntypoPath: ~'@{pathFont}/entypo';
+.font-face('entypo', 'entypo', normal, normal, @fontEntypoPath);
+
+// Reset and prettifying
+// ---
+.normalize(); // HTML5 normalization
+.placeholder(@watermarkColor, @watermarkStyle, @watermarkSize); // Style placeholders
+.enhance-scroll-bars(@width: 10px, @trackColor: @colorSilver, @thumbColor: @colorAsbestos, @thumbRadius: 0px); // Enhance scroll bars (Chrome only for now)
+
+// Define all the general rules
+// ---
+*,
+*:after,
+*:before
+{
+    .box-sizing(border-box);
+}
+
+a
+{
+    .link(@linkColor, none, @linkColorHover, none, @linkColor, none);
+    .transition(color @transitionDefault);
+}
+
+h1, h2, h3, h4, h5, h6
+{
+    line-height: 1em;
+}
+
+input,
+textarea
+{
+    .resizable(none);
+}
+
+html,
+body
+{
+    .font-smoothing();
+    //.no-tap-style();
+    background: @colorWhite;
+    color: @colorAsbestos;
+    font-family: @fontDefault;
+    font-size: 16px;
+    font-weight: normal;
+    line-height: 1em;
+    min-width: 396px;
+    text-align: left;
+}
+
+#loader
+{
+    display: none;
+    padding: 100px 20px;
+    text-align: center;
+}

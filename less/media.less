@@ -1,0 +1,108 @@
+﻿/*
+    Defined dimensions:
+        1006px or above [Normal / Full screen / Default] - This is the optimal experience;
+        768px to 1005px [Condensed / Tablet / iPad Portrait] - This is the condensed version of the full screen. Some visualization may be changed;
+        480px to 767px [Mobile / Mobile Landscape / iPhone Landscape] - This is the mobile version. Some visualization and functionality may be change or combined;
+        479px or below [Mobile Condensed / Mobile Portrait / iPhone Portrait] - This is the condensed version of the mobile layout. Some additional visualization and functionality may be changed or combined.
+*/
+
+/*
+    Available expressions:
+        width - The width of the current window
+        height - The height of the current window
+        device-width - The width of the device
+        device-height - The height of the device
+        orientation - Either landscape or portrait
+        aspect-ratio - The aspect ratio of the current window
+        device-aspect-ratio - The aspect ratio of the device
+        color - The number of color bits per color component
+        color-index - The number of available colors on the device
+        monochrome - The number of bits per pixel in a monochrome frame buffer
+        resolution - The resolution of the device
+        scan - Eiter progressive or interlace
+        grid - Is the device grid-based?
+*/
+
+.add-media-meta(@ruleName, @indicatorColor)
+{
+    &:after
+    {
+        content: @ruleName;
+        display: none;
+    }
+
+    &:not(.prod):before
+    {
+        .size(10px, 10px);
+        background: @indicatorColor;
+        content: '';
+        left: 0;
+        position: fixed;
+        top: 0;
+        z-index: 9999;
+    }
+}
+
+// Viewport rules (it's also defined in META tag)
+// -------------------------
+/*@-ms-viewport
+{
+    width: device-width;
+    zoom: 1;
+}
+@-o-viewport
+{
+    width: device-width;
+    zoom: 1;
+}
+@viewport
+{
+    width: device-width;
+    zoom: 1;
+}*/
+
+
+// Touch browsing default
+// -------------------------
+canvas
+{
+    -ms-touch-action: double-tap-zoom;
+}
+
+// General media query rules
+// -------------------------
+@media only screen and (min-width: @widthDesktopMin),
+       only screen and (min-device-width: @widthDesktopMin)
+{
+    body
+    {
+        .add-media-meta('desktop', black);
+    }
+}
+
+@media only screen and (min-width: @widthTabletMin) and (max-width: @widthTabletMax),
+       only screen and (min-device-width: @widthTabletMin) and (max-device-width: @widthTabletMax)
+{
+    body
+    {
+        .add-media-meta('tablet', green);
+    }
+}
+
+@media only screen and (min-width: @widthMobileLandscapeMin) and (max-width: @widthMobileLandscapeMax),
+       only screen and (min-device-width: @widthMobileLandscapeMin) and (max-device-width: @widthMobileLandscapeMax)
+{
+    body
+    {
+        .add-media-meta('mobileLandscape', blue);
+    }
+}
+
+@media only screen and (max-width: @widthMobilePortraitMax),
+       only screen and (max-device-width: @widthMobilePortraitMax)
+{
+    body
+    {
+        .add-media-meta('mobilePortrait', red);
+    }
+}

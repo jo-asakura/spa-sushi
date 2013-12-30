@@ -1,0 +1,118 @@
+.grid
+{
+    @fourthWidth: 25%;
+    @thirdWidth: 33%;
+    @halfWidth: 50%;
+    @fullWidth: 100%;
+
+    .clearfix();
+
+    .col
+    {
+        float: left;
+    }
+
+    &.full
+    {
+        .col
+        {
+            width: @fullWidth;
+        }
+    }
+
+    &.four-columns
+    {
+        .col
+        {
+            width: @fourthWidth;
+
+            &:nth-of-type(4n+1)
+            {
+                clear: left;
+            }
+        }
+    }
+
+    &.three-columns
+    {
+        .col
+        {
+            width: @thirdWidth;
+
+            &:nth-of-type(3n+1)
+            {
+                clear: left;
+            }
+        }
+    }
+
+    &.two-columns
+    {
+        .col
+        {
+            width: @halfWidth;
+
+            &:nth-of-type(2n+1)
+            {
+                clear: left;
+            }
+        }
+    }
+
+    /* Changing From 4-column to 3-Column */
+    @media screen and (max-width: 740px)
+    {
+        &.four-columns
+        {
+            .col
+            {
+                width: @thirdWidth;
+
+                &:nth-of-type(4n+1)
+                {
+                    clear: none;
+                }
+
+                &:nth-of-type(3n+1)
+                {
+                    clear: left;
+                }
+            }
+        }
+    }
+
+    /* Changing 4-column and 3-column to 2-column */
+    @media only screen and (max-width: 600px),
+           only screen and (max-device-width: 600px)
+    {
+        &.four-columns,
+        &.three-columns
+        {
+            .col
+            {
+                width: @halfWidth;
+
+                &.col:nth-of-type(3n+1)
+                {
+                    clear: none;
+                }
+
+                &.col:nth-of-type(2n+1)
+                {
+                    clear: left;
+                }
+            }
+        }
+    }
+
+    /* Making all columns Fullwidth */
+    @media only screen and (max-width: 400px),
+           only screen and (max-device-width: 400px)
+    {
+        .col
+        {
+            clear: none;
+            width: @fullWidth !important;
+        }
+    }
+}
