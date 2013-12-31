@@ -1,6 +1,6 @@
 # SPA-Sushi
 
-SPA-Sushi is an isomorphic implementation of a SPA ([Single-Page Application](http://en.wikipedia.org/wiki/Single-page_application)) principle on Node.js platform.
+SPA-Sushi is an [isomorphic JavaScript](http://blog.nodejitsu.com/scaling-isomorphic-javascript-code) implementation of a SPA ([Single-Page Application](http://en.wikipedia.org/wiki/Single-page_application)) approach/principle on Node.js platform.
 
 ## Major packages are being used
 
@@ -11,6 +11,8 @@ SPA-Sushi is an isomorphic implementation of a SPA ([Single-Page Application](ht
 - **[express](https://github.com/visionmedia/express)** as a back-end web framework;
 - **[director](https://github.com/flatiron/director)** package as a both client and server sides router;
 - **[grunt](https://github.com/gruntjs/)** as a JavaScript task runner to compile, build and run a web site.
+ 
+## Additional documentation is coming...
 
 ## Author
 
