@@ -3,8 +3,6 @@
 
     module.exports = {
         init: function (app, window, $, _, http, https, undefined) {
-            var ajax = null;
-
             var isJson = function (text) {
                 return (/^[\],:{}\s]*$/.test(text.replace(/\\["\\\/bfnrtu]/g, '@').
                     replace(/"[^"\\\n\r]*"|true|false|null|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?/g, ']').
@@ -63,7 +61,7 @@
                     .end();
             };
 
-            ajax = {
+            var ajax = {
                 get: function (options, cb) {
                     if (options) {
                         options.method = 'GET';

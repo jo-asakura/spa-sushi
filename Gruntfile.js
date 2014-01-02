@@ -97,7 +97,7 @@
         },
         browserify: {
             production: {
-                src: ['./features/**/app.startup.js'],
+                src: ['./features/**/app.startup.client.js'],
                 dest: './public/js/script.js'
             }
         },

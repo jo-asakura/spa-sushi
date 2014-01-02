@@ -3,8 +3,6 @@
 
     module.exports = {
         init: function (app, window, $, _, http, https, undefined) {
-            var ajax = null;
-
             var makeRequest = function (options, cb) {
                 $.ajax(_.defaults(options, {
                     headers: {},
@@ -23,7 +21,7 @@
                 }));
             };
 
-            ajax = {
+            var ajax = {
                 get: function (options, cb) {
                     makeRequest({
                         url: options.url,

@@ -45,7 +45,7 @@
 
 // Viewport rules (it's also defined in META tag)
 // -------------------------
-/*@-ms-viewport
+@-ms-viewport
 {
     width: device-width;
     zoom: 1;
@@ -59,8 +59,7 @@
 {
     width: device-width;
     zoom: 1;
-}*/
-
+}
 
 // Touch browsing default
 // -------------------------
@@ -71,6 +70,8 @@ canvas
 
 // General media query rules
 // -------------------------
+/* Uncomment following block if you want media queries' indicator on a page (useful for debugging) */
+/*
 @media only screen and (min-width: @widthDesktopMin),
        only screen and (min-device-width: @widthDesktopMin)
 {
@@ -106,3 +107,4 @@ canvas
         .add-media-meta('mobilePortrait', red);
     }
 }
+*/

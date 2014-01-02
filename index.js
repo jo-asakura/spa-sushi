@@ -78,7 +78,7 @@ server.configure('prod', function () {
 });
 
 /* init our features server side */
-var app = require('./features/app.server.js').init();
+var app = require('./features/app.startup.server.js').init();
 
 /* define routes */
 app.commons.routing.init({
