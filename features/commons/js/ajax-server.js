@@ -62,25 +62,25 @@
             };
 
             var ajax = {
-                get: function (options, cb) {
+                'get': function (options, cb) {
                     if (options) {
                         options.method = 'GET';
                         makeRequest(options, cb);
                     }
                 },
-                post: function (options, cb) {
+                'post': function (options, cb) {
                     if (options) {
                         options.method = 'POST';
                         makeRequest(options, cb);
                     }
                 },
-                put: function (options, cb) {
+                'put': function (options, cb) {
                     if (options) {
                         options.method = 'PUT';
                         makeRequest(options, cb);
                     }
                 },
-                delete: function (options, cb) {
+                'delete': function (options, cb) {
                     if (options) {
                         options.method = 'DELETE';
                         makeRequest(options, cb);

@@ -22,7 +22,7 @@
             };
 
             var ajax = {
-                get: function (options, cb) {
+                'get': function (options, cb) {
                     makeRequest({
                         url: options.url,
                         data: options.data,
@@ -30,7 +30,7 @@
                         type: 'get'
                     }, cb);
                 },
-                post: function (options, cb) {
+                'post': function (options, cb) {
                     makeRequest({
                         url: options.url,
                         data: options.data,
@@ -38,7 +38,7 @@
                         type: 'post'
                     }, cb);
                 },
-                delete: function (options, cb) {
+                'delete': function (options, cb) {
                     makeRequest({
                         url: options.url,
                         data: options.data,
