@@ -25,10 +25,6 @@ if(typeof module !== 'undefined' && typeof module.exports !== 'undefined') {
         window.app = container.resolve('startup');
     }
 
-    if (!('require' in window)) {
-        window.require = container.resolve('require');
-    }
-
     // logging all "loaded" events, just for fun or debugging purposes
     window.app.bus.on(window.app.namespace + '::*::loaded', function (data) {
         console.log('loaded: ', data);
@@ -78,7 +74,6 @@ if(typeof module !== 'undefined' && typeof module.exports !== 'undefined') {
             .define({ name: 'router', type: wrapGlobal(director), singleton: true })
             .define({ name: 'templates', type: wrapGlobal(templates), singleton: true })
             .define({ name: 'async', type: wrapGlobal(async), singleton: true })
-            .define({ name: 'require', type: wrapGlobal(require), singleton: true })
             .define({ name: 'http', type: wrapGlobal(http), singleton: true })
             .define({ name: 'https', type: wrapGlobal(https), singleton: true })
             .define({ name: 'app', type: function () {
@@ -234,7 +229,7 @@ if(typeof module !== 'undefined' && typeof module.exports !== 'undefined') {
             };
 
             var ajax = {
-                get: function (options, cb) {
+                'get': function (options, cb) {
                     makeRequest({
                         url: options.url,
                         data: options.data,
@@ -242,7 +237,7 @@ if(typeof module !== 'undefined' && typeof module.exports !== 'undefined') {
                         type: 'get'
                     }, cb);
                 },
-                post: function (options, cb) {
+                'post': function (options, cb) {
                     makeRequest({
                         url: options.url,
                         data: options.data,
@@ -250,7 +245,7 @@ if(typeof module !== 'undefined' && typeof module.exports !== 'undefined') {
                         type: 'post'
                     }, cb);
                 },
-                delete: function (options, cb) {
+                'delete': function (options, cb) {
                     makeRequest({
                         url: options.url,
                         data: options.data,
@@ -332,25 +327,25 @@ if(typeof module !== 'undefined' && typeof module.exports !== 'undefined') {
             };
 
             var ajax = {
-                get: function (options, cb) {
+                'get': function (options, cb) {
                     if (options) {
                         options.method = 'GET';
                         makeRequest(options, cb);
                     }
                 },
-                post: function (options, cb) {
+                'post': function (options, cb) {
                     if (options) {
                         options.method = 'POST';
                         makeRequest(options, cb);
                     }
                 },
-                put: function (options, cb) {
+                'put': function (options, cb) {
                     if (options) {
                         options.method = 'PUT';
                         makeRequest(options, cb);
                     }
                 },
-                delete: function (options, cb) {
+                'delete': function (options, cb) {
                     if (options) {
                         options.method = 'DELETE';
                         makeRequest(options, cb);

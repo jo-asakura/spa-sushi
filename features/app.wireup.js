@@ -33,7 +33,6 @@
             .define({ name: 'router', type: wrapGlobal(director), singleton: true })
             .define({ name: 'templates', type: wrapGlobal(templates), singleton: true })
             .define({ name: 'async', type: wrapGlobal(async), singleton: true })
-            .define({ name: 'require', type: wrapGlobal(require), singleton: true })
             .define({ name: 'http', type: wrapGlobal(http), singleton: true })
             .define({ name: 'https', type: wrapGlobal(https), singleton: true })
             .define({ name: 'app', type: function () {

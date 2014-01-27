@@ -9,10 +9,6 @@
         window.app = container.resolve('startup');
     }
 
-    if (!('require' in window)) {
-        window.require = container.resolve('require');
-    }
-
     // logging all "loaded" events, just for fun or debugging purposes
     window.app.bus.on(window.app.namespace + '::*::loaded', function (data) {
         console.log('loaded: ', data);
