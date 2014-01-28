@@ -21,12 +21,20 @@
                     /(webkit)[ \/]([\w.]+)/.exec(ua) ||
                     /(opera)(?:.*version|)[ \/]([\w.]+)/.exec(ua) ||
                     /(msie) ([\w.]+)/.exec(ua) ||
+                    /(trident).*(rv[ :][\w.]+)/.exec(ua) ||
                     ua.indexOf("compatible") < 0 && /(mozilla)(?:.*? rv:([\w.]+)|)/.exec(ua) ||
                     [];
-                return {
+                
+                var result = {
                     browser: match[1] || '',
                     version: match[2] || '0'
                 };
+
+                /* special stuff for IE11 detection */
+                result.browser = (result.browser === 'trident' ? 'msie' : result.browser);
+                result.version = (result.version === 'rv:11.0' ? '11' : result.version);
+
+                return result;
             };
 
             // Set current browser info
