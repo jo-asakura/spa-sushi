@@ -11,7 +11,9 @@
         "consolidate": "*",
         "director": "*",
         "winston": "*",
-        "async": "*"
+        "async": "*",
+        "simple-walk": "*",
+        "less-combiner": "*"
     },
     "devDependencies": {
         "grunt": "*",

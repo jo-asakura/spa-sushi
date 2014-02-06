@@ -1,8 +1,8 @@
 ﻿module.exports = function (grunt) {
     var _ = require('underscore');
     var fs = require('fs');
-    var walk = require('./modules/walk.js');
-    var lessCombiner = require('./modules/less-combiner.js');
+    var walk = require('simple-walk');
+    var lessCombiner = require('less-combiner');
 
     var outputs = {
         less: './build/style.less',
