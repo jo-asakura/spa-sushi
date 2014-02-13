@@ -3,12 +3,8 @@
 
     var moduleName = 'routing';
 
-    var getFullDomain = function (location) {
-        return location.protocol + '//' + location.host;
-    };
-
     module.exports = {
-        init: function (app, window, $, _, ajax, browser, router, page, undefined) {
+        init: function (app, window, $, _, ajax, browser, router, routesDict, page, undefined) {
             var routing = {
                 router: null,
                 init: function (data, cb) {
@@ -21,51 +17,14 @@
                         };
                     };
 
-                    var routes = {};
-
-                    // Home route
-                    routes['/'] = (function () {
-                        var handler = function () {
-                            page.render(_.extend({}, {
-                                routeData: {pageName: 'home'}
-                            }, getServerObject(this)));
+                    var routes = _.reduce(routesDict, function (memo, data, route) {
+                        memo[route] = {
+                            get: function () {
+                                page.render(_.extend({}, data, getServerObject(this)));
+                            }
                         };
-
-                        return {get: handler};
-                    })();
-
-                    // Home route
-                    routes['/(home|index)'] = (function () {
-                        var handler = function () {
-                            page.render(_.extend({
-                                routeData: {pageName: 'home'}
-                            }, getServerObject(this)));
-                        };
-
-                        return {get: handler};
-                    })();
-
-                    // About route
-                    routes['/about'] = (function () {
-                        var handler = function () {
-                            page.render(_.extend({
-                                routeData: {pageName: 'about'}
-                            }, getServerObject(this)));
-                        };
-
-                        return {get: handler};
-                    })();
-
-                    // Contact route
-                    routes['/contact'] = (function () {
-                        var handler = function () {
-                            page.render(_.extend({
-                                routeData: {pageName: 'contact'}
-                            }, getServerObject(this)));
-                        };
-
-                        return {get: handler};
-                    })();
+                        return memo;
+                    }, {});
 
                     routes['/api'] = {
                         '/terms': {

@@ -16,7 +16,7 @@
                         name: 'routing',
                         type: require('./js/routing-server.js').init,
                         category: 'commons',
-                        deps: ['app', 'window', '$', '_', 'ajax', 'browser', 'router', 'page'],
+                        deps: ['app', 'window', '$', '_', 'ajax', 'browser', 'router', 'routes', 'page'],
                         singleton: true
                     });
             } else {
@@ -32,7 +32,7 @@
                         name: 'routing',
                         type: require('./js/routing-client.js').init,
                         category: 'commons',
-                        deps: ['app', 'window', '$', '_', 'ajax', 'browser', 'router', 'page'],
+                        deps: ['app', 'window', '$', '_', 'ajax', 'browser', 'router', 'routes', 'page'],
                         singleton: true
                     });
             }
@@ -57,6 +57,13 @@
                     type: require('./js/page.js').init,
                     category: 'commons',
                     deps: ['app', 'window', '$', '_', 'async', 'browser'],
+                    singleton: true
+                })
+                .define({
+                    name: 'routes',
+                    type: require('./js/routes.js').init,
+                    category: 'commons',
+                    deps: [],
                     singleton: true
                 })
                 .define({

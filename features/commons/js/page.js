@@ -74,7 +74,7 @@
                     });
                 },
                 renderNotFound: function () {
-                    // ...
+                    // TODO: not found page implementation
                 },
                 wireup: function (data, cb) {
                     if (window && window.document) {

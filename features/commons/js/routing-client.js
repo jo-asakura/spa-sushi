@@ -3,64 +3,25 @@
 
     var moduleName = 'routing';
 
+    var getRegExSlashOrQueryString = function () {
+        return '((\/)|(\\?.*))?';
+    };
+
     var getFullDomain = function (location) {
         return location.protocol + '//' + location.host;
     };
 
     module.exports = {
-        init: function (app, window, $, _, ajax, browser, router, page, undefined) {
+        init: function (app, window, $, _, ajax, browser, router, routesDict, page, undefined) {
             var routing = {
                 router: null,
                 init: function (data, cb) {
-                    var getRegExSlashOrQueryString = function () {
-                        return '((\/)|(\\?.*))?';
-                    };
-
-                    var routes = {};
-
-                    // Home route
-                    routes['/' + getRegExSlashOrQueryString()] = (function () {
-                        var handler = function () {
-                            page.render({
-                                routeData: {pageName: 'home'}
-                            });
+                    var routes = _.reduce(routesDict, function (memo, data, route) {
+                        memo[route + getRegExSlashOrQueryString()] = function () {
+                            page.render(data);
                         };
-
-                        return handler;
-                    })();
-
-                    // Home route
-                    routes['/(home|index)' + getRegExSlashOrQueryString()] = (function () {
-                        var handler = function () {
-                            page.render({
-                                routeData: {pageName: 'home'}
-                            });
-                        };
-
-                        return handler;
-                    })();
-
-                    // About route
-                    routes['/about'] = (function () {
-                        var handler = function () {
-                            page.render({
-                                routeData: {pageName: 'about'}
-                            });
-                        };
-
-                        return handler;
-                    })();
-
-                    // Contact route
-                    routes['/contact'] = (function () {
-                        var handler = function () {
-                            page.render({
-                                routeData: {pageName: 'contact'}
-                            });
-                        };
-
-                        return handler;
-                    })();
+                        return memo;
+                    }, {});
 
                     routing.router = router.Router(routes).configure({
                         //run_handler_in_init: false,
