@@ -1,30 +1,27 @@
 {
-    "name": "spa-sushi",
-    "private": true,
-    "description": "SPA Sushi",
-    "dependencies": {
-        "underscore": "*",
-        "hogan.js": "*",
-        "eventemitter2": "*",
-        "nodeject": "*",
-        "express": "*",
-        "consolidate": "*",
-        "director": "*",
-        "winston": "*",
-        "async": "*",
-        "simple-walk": "*",
-        "less-combiner": "*"
-    },
-    "devDependencies": {
-        "grunt": "*",
-        "grunt-browserify": "*",
-        "grunt-contrib-htmlmin": "*",
-        "grunt-contrib-hogan": "*",
-        "grunt-contrib-less": "*",
-        "grunt-contrib-watch": "*",
-        "grunt-contrib-concat": "*",
-        "grunt-contrib-uglify": "*",
-        "grunt-nodemon": "*",
-        "grunt-forever": "*"
-    }
+  "name": "spa-sushi",
+  "private": true,
+  "description": "SPA Sushi",
+  "dependencies": {
+    "async": "^0.9.0",
+    "consolidate": "0.10.0",
+    "director": "1.2.3",
+    "eventemitter2": "^0.4.14",
+    "express": "3.5.0",
+    "hogan.js": "^3.0.2",
+    "less-combiner": "^0.1.2",
+    "nodeject": "0.4.2",
+    "simple-walk": "^0.1.3",
+    "underscore": "^1.7.0",
+    "winston": "0.7.2"
+  },
+  "devDependencies": {
+    "grunt": "^0.4.5",
+    "grunt-browserify": "^3.3.0",
+    "grunt-contrib-concat": "^0.5.0",
+    "grunt-contrib-hogan": "^0.2.4",
+    "grunt-contrib-htmlmin": "^0.3.0",
+    "grunt-contrib-less": "^1.0.0",
+    "grunt-contrib-uglify": "^0.7.0"
+  }
 }

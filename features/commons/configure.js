@@ -1,78 +1,67 @@
 ﻿(function commonConfigure(module) {
-    'use strict';
+  'use strict';
 
-    module.exports = {
-        configure: function (container, isServerSide) {
-            if (isServerSide) {
-                container
-                    .define({
-                        name: 'ajax',
-                        type: require('./js/ajax-server.js').init,
-                        category: 'commons',
-                        deps: ['app', 'window', '$', '_', 'http', 'https'],
-                        singleton: true
-                    })
-                    .define({
-                        name: 'routing',
-                        type: require('./js/routing-server.js').init,
-                        category: 'commons',
-                        deps: ['app', 'window', '$', '_', 'ajax', 'browser', 'router', 'routes', 'page'],
-                        singleton: true
-                    });
-            } else {
-                container
-                    .define({
-                        name: 'ajax',
-                        type: require('./js/ajax-client.js').init,
-                        category: 'commons',
-                        deps: ['app', 'window', '$', '_', 'http', 'https'],
-                        singleton: true
-                    })
-                    .define({
-                        name: 'routing',
-                        type: require('./js/routing-client.js').init,
-                        category: 'commons',
-                        deps: ['app', 'window', '$', '_', 'ajax', 'browser', 'router', 'routes', 'page'],
-                        singleton: true
-                    });
-            }
+  module.exports = {
+    configure: function (isServerSide) {
+      var result = {
+        'commons': [
+          {
+            name: 'browser',
+            type: require('./js/browser.js').init,
+            deps: ['app', 'window', '$']
+          },
+          {
+            name: 'logging',
+            type: require('./js/logging.js').init,
+            deps: ['app', '_', 'ajax', 'browser']
+          },
+          {
+            name: 'page',
+            type: require('./js/page.js').init,
+            deps: ['app', 'window', '$', '_', 'async', 'browser']
+          },
+          {
+            name: 'routes',
+            type: require('./js/routes.js').init,
+            deps: []
+          },
+          {
+            name: 'utils',
+            type: require('./js/utils.js').init,
+            deps: ['app', 'window', '$', '_', 'browser']
+          }
+        ]
+      };
 
-            container
-                .define({
-                    name: 'browser',
-                    type: require('./js/browser.js').init,
-                    category: 'commons',
-                    deps: ['app', 'window', '$'],
-                    singleton: true
-                })
-                .define({
-                    name: 'logging',
-                    type: require('./js/logging.js').init,
-                    category: 'commons',
-                    deps: ['app', '_', 'ajax', 'browser'],
-                    singleton: true
-                })
-                .define({
-                    name: 'page',
-                    type: require('./js/page.js').init,
-                    category: 'commons',
-                    deps: ['app', 'window', '$', '_', 'async', 'browser'],
-                    singleton: true
-                })
-                .define({
-                    name: 'routes',
-                    type: require('./js/routes.js').init,
-                    category: 'commons',
-                    deps: [],
-                    singleton: true
-                })
-                .define({
-                    name: 'utils',
-                    type: require('./js/utils.js').init,
-                    category: 'commons',
-                    deps: ['app', 'window', '$', '_', 'browser'],
-                    singleton: true
-                });
-        }
-    };
+      if (isServerSide) {
+        result['commons'] = result['commons'].concat([
+          {
+            name: 'ajax',
+            type: require('./js/ajax-server.js').init,
+            deps: ['app', 'window', '$', '_', 'http', 'https']
+          },
+          {
+            name: 'routing',
+            type: require('./js/routing-server.js').init,
+            deps: ['app', 'window', '$', '_', 'ajax', 'browser', 'router', 'routes', 'page']
+          }
+        ]);
+      } else {
+        result['commons'] = result['commons'].concat([
+          {
+            name: 'ajax',
+            type: require('./js/ajax-client.js').init,
+            deps: ['app', 'window', '$', '_', 'http', 'https']
+          },
+          {
+            name: 'routing',
+            type: require('./js/routing-client.js').init,
+            deps: ['app', 'window', '$', '_', 'ajax', 'browser', 'router', 'routes', 'page']
+          }
+        ]);
+      }
+
+      return result;
+    }
+  };
 })(module);

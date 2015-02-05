@@ -86,4 +86,6 @@ app.commons.routing.init({
     log: log
 });
 
-server.listen(7889);
+server.listen(7889, function () {
+    console.log('Server is up and running at port 7889. Try to use localhost:7889 or 127.0.0.1:7889 in your browser.');
+});

@@ -125,15 +125,8 @@
     grunt.loadNpmTasks('grunt-contrib-concat');
     grunt.loadNpmTasks('grunt-contrib-less');
     grunt.loadNpmTasks('grunt-contrib-uglify');
-    //grunt.loadNpmTasks('grunt-nodemon');
-    grunt.loadNpmTasks('grunt-forever');
 
-    grunt.registerTask('build', ['less', 'htmlmin', 'hogan', 'concat', 'browserify', 'uglify']);
-    grunt.registerTask('run', ['forever:start']);
-
-    grunt.registerTask('default', 'Build and Run', function () {
-        grunt.task.run(['build', 'run']);
-    });
+    grunt.registerTask('default', ['less', 'htmlmin', 'hogan', 'concat', 'browserify', 'uglify']);
 
     /*
      How-to:

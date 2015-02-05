@@ -4,6 +4,10 @@
 # Build results
 build/
 log/
+public/css/style.css
+public/css/style.min.css
+public/js/script.js
+public/js/script.min.js
 
 # NPM Directory
 node_modules/
