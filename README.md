@@ -20,6 +20,7 @@ SPA-Sushi is an [isomorphic JavaScript](http://blog.nodejitsu.com/scaling-isomor
 
 + [http://twitter.com/jo_asakura](http://twitter.com/jo_asakura)
 + [http://github.com/jo-asakura](http://github.com/jo-asakura)
++ [http://codepen.io/jo-asakura](http://codepen.io/jo-asakura/popular/)
 
 ## Copyright and license
 
