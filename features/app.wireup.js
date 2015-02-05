@@ -3,18 +3,6 @@
 (function appWireup(module) {
   'use strict';
 
-  var wrapGlobal = function (obj) {
-    return function () {
-      return obj;
-    };
-  };
-
-  var wrap = function (name) {
-    return function (obj) {
-      return obj[name];
-    };
-  };
-
   module.exports = function (window, $, isServerSide, undefined) {
     var Nodeject = require('nodeject');
     var _ = require('underscore');
@@ -27,14 +15,14 @@
 
     var container = new Nodeject({ singleton: true });
     container
-      .define({ name: 'window', type: wrapGlobal(window), singleton: true })
-      .define({ name: '$', type: wrapGlobal($), singleton: true })
-      .define({ name: '_', type: wrapGlobal(_), singleton: true })
-      .define({ name: 'router', type: wrapGlobal(director), singleton: true })
-      .define({ name: 'templates', type: wrapGlobal(templates), singleton: true })
-      .define({ name: 'async', type: wrapGlobal(async), singleton: true })
-      .define({ name: 'http', type: wrapGlobal(http), singleton: true })
-      .define({ name: 'https', type: wrapGlobal(https), singleton: true })
+      .define({ name: 'window', wrap: { resolve: window || null } })
+      .define({ name: '$', wrap: { resolve: $ || null } })
+      .define({ name: '_', wrap: { resolve: _ } })
+      .define({ name: 'router', wrap: { resolve: director } })
+      .define({ name: 'templates', wrap: { resolve: templates } })
+      .define({ name: 'async', wrap: { resolve: async } })
+      .define({ name: 'http', wrap: { resolve: http } })
+      .define({ name: 'https', wrap: { resolve: https } })
       .define({
         name: 'app', type: function () {
           return {
@@ -46,9 +34,9 @@
             namespace: 'spa-sushi',
             attrPage: 'data-page'
           };
-        }, singleton: true
+        }
       })
-      .define({ name: 'bus', type: wrap('bus'), singleton: true, deps: ['app'] })
+      .define({ name: 'bus', wrap: { resolve: 'bus', context: 'app' } })
       .define({
         name: 'startup',
         type: function (app, templates) {

@@ -47,6 +47,8 @@
                                 scripts: ['/js/script.js', '/js/underscore-min.js']
                             }, asyncData));
 
+                            console.log('!!! >>>', app.templates['commons/layout'].render({}));
+
                             res.set('Content-Type', 'text/html');
                             res.send(200, html);
                         } else {

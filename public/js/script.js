@@ -17,200 +17,199 @@ if(typeof module !== 'undefined' && typeof module.exports !== 'undefined') {
 // Application's startup (an entry point) on a client side
 // ------------
 (function appStartupClientSide(window, $, undefined) {
-    var wireup = require('./app.wireup.js');
-    var container = wireup(window, $, false);
+  var wireup = require('./app.wireup.js');
+  var container = wireup(window, $, false);
 
-    // Prepare the environment
-    if (!('app' in window)) {
-        window.app = container.resolve('startup');
-    }
+  // Prepare the environment
+  if (!('app' in window)) {
+    window.app = container.resolve('startup');
+  }
 
-    // logging all "loaded" events, just for fun or debugging purposes
-    window.app.bus.on(window.app.namespace + '::*::loaded', function (data) {
-        console.log('loaded: ', data);
-    });
+  // logging all "loaded" events, just for fun or debugging purposes
+  window.app.bus.on(window.app.namespace + '::*::loaded', function (data) {
+    console.log('loaded: ', data);
+  });
 
-    // init our app on a page load
-    $(function () {
-        var obj = {id: window.app.namespace};
-        window.app.bus.emit(window.app.namespace + '::routing::init', obj, function () {
-            window.app.bus.emit(window.app.namespace + '::app::loaded', obj);
-        })
-    });
-})(window, jQuery);
+  // init our app on a page load
+  $(function () {
+    var obj = { id: window.app.namespace };
+    window.app.bus.emit(window.app.namespace + '::routing::init', obj, function () {
+      window.app.bus.emit(window.app.namespace + '::app::loaded', obj);
+    })
+  });
+})(window, window.jQuery);
 },{"./app.wireup.js":3}],3:[function(require,module,exports){
 // Application's wire-up
 // ------------
 (function appWireup(module) {
-    'use strict';
+  'use strict';
 
-    var wrapGlobal = function (obj) {
-        return function () {
-            return obj;
-        };
-    };
+  module.exports = function (window, $, isServerSide, undefined) {
+    var Nodeject = require('nodeject');
+    var _ = require('underscore');
+    var EventEmitter2 = require('eventemitter2').EventEmitter2;
+    var director = require('director');
+    var templates = require('../build/templates.js');
+    var async = require('async');
+    var http = require('http');
+    var https = require('https');
 
-    var wrap = function (name) {
-        return function (obj) {
-            return obj[name];
-        };
-    };
-
-    module.exports = function (window, $, isServerSide, undefined) {
-        var Nodeject = require('nodeject');
-        var _ = require('underscore');
-        var EventEmitter2 = require('eventemitter2').EventEmitter2;
-        var director = require('director');
-        var templates = require('../build/templates.js');
-        var async = require('async');
-        var http = require('http');
-        var https = require('https');
-
-        var container = new Nodeject();
-        container
-            .define({ name: 'window', type: wrapGlobal(window), singleton: true })
-            .define({ name: '$', type: wrapGlobal($), singleton: true })
-            .define({ name: '_', type: wrapGlobal(_), singleton: true })
-            .define({ name: 'router', type: wrapGlobal(director), singleton: true })
-            .define({ name: 'templates', type: wrapGlobal(templates), singleton: true })
-            .define({ name: 'async', type: wrapGlobal(async), singleton: true })
-            .define({ name: 'http', type: wrapGlobal(http), singleton: true })
-            .define({ name: 'https', type: wrapGlobal(https), singleton: true })
-            .define({ name: 'app', type: function () {
-                return {
-                    bus: new EventEmitter2({
-                        wildcard: true,
-                        delimiter: '::'
-                    }),
-                    isServerSide: isServerSide,
-                    namespace: 'spa-sushi',
-                    attrPage: 'data-page'
-                };
-            }, singleton: true })
-            .define({ name: 'bus', type: wrap('bus'), singleton: true, deps: ['app'] })
-            .define({
-                name: 'startup',
-                type: function (app, templates) {
-                    var resolveDeps = function (container, app, categories) {
-                        _.each(categories || [], function (category) {
-                            app[category] = container.resolve({
-                                category: category,
-                                format: 'literal'
-                            });
-                        });
-                    };
-
-                    resolveDeps(container, app, ['commons', 'presenters', 'controllers', 'wireups']);
-
-                    // Assign the container
-                    app.container = container;
-                    app.templates = templates;
-
-                    // Return the initialized app
-                    return app;
-                },
-                deps: ['app', 'templates']
+    var container = new Nodeject({ singleton: true });
+    container
+      .define({ name: 'window', wrap: { resolve: window || null } })
+      .define({ name: '$', wrap: { resolve: $ || null } })
+      .define({ name: '_', wrap: { resolve: _ } })
+      .define({ name: 'router', wrap: { resolve: director } })
+      .define({ name: 'templates', wrap: { resolve: templates } })
+      .define({ name: 'async', wrap: { resolve: async } })
+      .define({ name: 'http', wrap: { resolve: http } })
+      .define({ name: 'https', wrap: { resolve: https } })
+      .define({
+        name: 'app', type: function () {
+          return {
+            bus: new EventEmitter2({
+              wildcard: true,
+              delimiter: '::'
+            }),
+            isServerSide: isServerSide,
+            namespace: 'spa-sushi',
+            attrPage: 'data-page'
+          };
+        }
+      })
+      .define({ name: 'bus', wrap: { resolve: 'bus', context: 'app' } })
+      .define({
+        name: 'startup',
+        type: function (app, templates) {
+          (function resolveDependencies(container, app) {
+            var categories = ['commons', 'presenters', 'controllers', 'wireups'];
+            categories.forEach(function (category) {
+              app[category] = container.resolve({
+                category: category,
+                format: 'literal'
+              });
             });
+          })(container, app);
 
-        // Wire up features
-        var common = require('./commons/configure.js');
-        common.configure(container, isServerSide);
-        var wHeader = require('./widget-header/configure.js');
-        wHeader.configure(container);
-        var wContent = require('./widget-content/configure.js');
-        wContent.configure(container);
-        var wFooter = require('./widget-footer/configure.js');
-        wFooter.configure(container);
+          // Assign the container
+          app.container = container;
+          app.templates = templates;
 
-        var wInfo = require('./widget-info/configure.js');
-        wInfo.configure(container);
-        var wLinks = require('./widget-links/configure.js');
-        wLinks.configure(container);
-        var wSocial = require('./widget-social/configure.js');
-        wSocial.configure(container);
+          // Return the initialized app
+          return app;
+        },
+        deps: ['app', 'templates']
+      });
 
-        return container;
-    };
+    function addToList(aggr, obj) {
+      aggr = aggr || {};
+      if (obj) {
+        _.keys(obj || []).forEach(function (category) {
+          aggr[category] = aggr[category] || [];
+          aggr[category] = aggr[category].concat(obj[category]);
+        });
+      }
+      return aggr;
+    }
+
+    // Wire up features
+    var configs = {};
+
+    var commons = require('./commons/configure.js');
+    addToList(configs, commons.configure(isServerSide));
+    var wHeader = require('./widget-header/configure.js');
+    addToList(configs, wHeader);
+    var wContent = require('./widget-content/configure.js');
+    addToList(configs, wContent);
+    var wFooter = require('./widget-footer/configure.js');
+    addToList(configs, wFooter);
+
+    var wInfo = require('./widget-info/configure.js');
+    addToList(configs, wInfo);
+    var wLinks = require('./widget-links/configure.js');
+    addToList(configs, wLinks);
+    var wSocial = require('./widget-social/configure.js');
+    addToList(configs, wSocial);
+
+    _.keys(configs || []).forEach(function (category) {
+      (configs[category] || []).forEach(function (item) {
+        container.define(_.extend({ category: category }, item));
+      });
+    });
+
+    return container;
+  };
 })(module);
+
 },{"../build/templates.js":1,"./commons/configure.js":4,"./widget-content/configure.js":14,"./widget-footer/configure.js":19,"./widget-header/configure.js":23,"./widget-info/configure.js":27,"./widget-links/configure.js":31,"./widget-social/configure.js":35,"async":39,"director":40,"eventemitter2":41,"http":47,"https":51,"nodeject":78,"underscore":79}],4:[function(require,module,exports){
 (function commonConfigure(module) {
-    'use strict';
+  'use strict';
 
-    module.exports = {
-        configure: function (container, isServerSide) {
-            if (isServerSide) {
-                container
-                    .define({
-                        name: 'ajax',
-                        type: require('./js/ajax-server.js').init,
-                        category: 'commons',
-                        deps: ['app', 'window', '$', '_', 'http', 'https'],
-                        singleton: true
-                    })
-                    .define({
-                        name: 'routing',
-                        type: require('./js/routing-server.js').init,
-                        category: 'commons',
-                        deps: ['app', 'window', '$', '_', 'ajax', 'browser', 'router', 'routes', 'page'],
-                        singleton: true
-                    });
-            } else {
-                container
-                    .define({
-                        name: 'ajax',
-                        type: require('./js/ajax-client.js').init,
-                        category: 'commons',
-                        deps: ['app', 'window', '$', '_', 'http', 'https'],
-                        singleton: true
-                    })
-                    .define({
-                        name: 'routing',
-                        type: require('./js/routing-client.js').init,
-                        category: 'commons',
-                        deps: ['app', 'window', '$', '_', 'ajax', 'browser', 'router', 'routes', 'page'],
-                        singleton: true
-                    });
-            }
+  module.exports = {
+    configure: function (isServerSide) {
+      var result = {
+        'commons': [
+          {
+            name: 'browser',
+            type: require('./js/browser.js').init,
+            deps: ['app', 'window', '$']
+          },
+          {
+            name: 'logging',
+            type: require('./js/logging.js').init,
+            deps: ['app', '_', 'ajax', 'browser']
+          },
+          {
+            name: 'page',
+            type: require('./js/page.js').init,
+            deps: ['app', 'window', '$', '_', 'async', 'browser']
+          },
+          {
+            name: 'routes',
+            type: require('./js/routes.js').init,
+            deps: []
+          },
+          {
+            name: 'utils',
+            type: require('./js/utils.js').init,
+            deps: ['app', 'window', '$', '_', 'browser']
+          }
+        ]
+      };
 
-            container
-                .define({
-                    name: 'browser',
-                    type: require('./js/browser.js').init,
-                    category: 'commons',
-                    deps: ['app', 'window', '$'],
-                    singleton: true
-                })
-                .define({
-                    name: 'logging',
-                    type: require('./js/logging.js').init,
-                    category: 'commons',
-                    deps: ['app', '_', 'ajax', 'browser'],
-                    singleton: true
-                })
-                .define({
-                    name: 'page',
-                    type: require('./js/page.js').init,
-                    category: 'commons',
-                    deps: ['app', 'window', '$', '_', 'async', 'browser'],
-                    singleton: true
-                })
-                .define({
-                    name: 'routes',
-                    type: require('./js/routes.js').init,
-                    category: 'commons',
-                    deps: [],
-                    singleton: true
-                })
-                .define({
-                    name: 'utils',
-                    type: require('./js/utils.js').init,
-                    category: 'commons',
-                    deps: ['app', 'window', '$', '_', 'browser'],
-                    singleton: true
-                });
-        }
-    };
+      if (isServerSide) {
+        result['commons'] = result['commons'].concat([
+          {
+            name: 'ajax',
+            type: require('./js/ajax-server.js').init,
+            deps: ['app', 'window', '$', '_', 'http', 'https']
+          },
+          {
+            name: 'routing',
+            type: require('./js/routing-server.js').init,
+            deps: ['app', 'window', '$', '_', 'ajax', 'browser', 'router', 'routes', 'page']
+          }
+        ]);
+      } else {
+        result['commons'] = result['commons'].concat([
+          {
+            name: 'ajax',
+            type: require('./js/ajax-client.js').init,
+            deps: ['app', 'window', '$', '_', 'http', 'https']
+          },
+          {
+            name: 'routing',
+            type: require('./js/routing-client.js').init,
+            deps: ['app', 'window', '$', '_', 'ajax', 'browser', 'router', 'routes', 'page']
+          }
+        ]);
+      }
+
+      return result;
+    }
+  };
 })(module);
+
 },{"./js/ajax-client.js":5,"./js/ajax-server.js":6,"./js/browser.js":7,"./js/logging.js":8,"./js/page.js":9,"./js/routes.js":10,"./js/routing-client.js":11,"./js/routing-server.js":12,"./js/utils.js":13}],5:[function(require,module,exports){
 (function ajaxClientInit(module) {
     'use strict';
@@ -696,6 +695,8 @@ if(typeof module !== 'undefined' && typeof module.exports !== 'undefined') {
                                 styles: ['/css/style.css'],
                                 scripts: ['/js/script.js', '/js/underscore-min.js']
                             }, asyncData));
+
+                            console.log('!!! >>>', app.templates['commons/layout'].render({}));
 
                             res.set('Content-Type', 'text/html');
                             res.send(200, html);
@@ -1233,42 +1234,38 @@ if(typeof module !== 'undefined' && typeof module.exports !== 'undefined') {
 })(module);
 },{}],14:[function(require,module,exports){
 (function widgetContentConfigure(module) {
-    'use strict';
+  'use strict';
 
-    module.exports = {
-        configure: function (container) {
-            container
-                .define({
-                    name: 'widgetContentController',
-                    type: require('./js/controller.js').init,
-                    category: 'controllers',
-                    deps: ['app', 'window', '$', '_', 'ajax'],
-                    singleton: true
-                })
-                .define({
-                    name: 'widgetContentPresenter',
-                    type: require('./js/presenter.js').init,
-                    category: 'presenters',
-                    deps: ['app', 'window', '$', '_', 'async', 'widgetContentStructure'],
-                    singleton: true
-                })
-                .define({
-                    name: 'widgetContentStructure',
-                    type: require('./js/structure.js').init,
-                    category: 'controllers',
-                    deps: [],
-                    singleton: true
-                })
-                .define({
-                    name: 'widgetContentWireup',
-                    type: require('./js/wireup.js').init,
-                    category: 'wireups',
-                    deps: ['app', 'window', '$', '_', 'async', 'widgetContentStructure'],
-                    singleton: true
-                });
-        }
-    };
+  module.exports = {
+    'controllers': [
+      {
+        name: 'widgetContentController',
+        type: require('./js/controller.js').init,
+        deps: ['app', 'window', '$', '_', 'ajax']
+      },
+      {
+        name: 'widgetContentStructure',
+        type: require('./js/structure.js').init,
+        deps: []
+      }
+    ],
+    'presenters': [
+      {
+        name: 'widgetContentPresenter',
+        type: require('./js/presenter.js').init,
+        deps: ['app', 'window', '$', '_', 'async', 'widgetContentStructure']
+      }
+    ],
+    'wireups': [
+      {
+        name: 'widgetContentWireup',
+        type: require('./js/wireup.js').init,
+        deps: ['app', 'window', '$', '_', 'async', 'widgetContentStructure']
+      }
+    ]
+  };
 })(module);
+
 },{"./js/controller.js":15,"./js/presenter.js":16,"./js/structure.js":17,"./js/wireup.js":18}],15:[function(require,module,exports){
 (function widgetContentControllerInit(module) {
     'use strict';
@@ -1429,35 +1426,33 @@ if(typeof module !== 'undefined' && typeof module.exports !== 'undefined') {
 })(module);
 },{}],19:[function(require,module,exports){
 (function widgetFooterConfigure(module) {
-    'use strict';
+  'use strict';
 
-    module.exports = {
-        configure: function (container) {
-            container
-                .define({
-                    name: 'widgetFooterController',
-                    type: require('./js/controller.js').init,
-                    category: 'controllers',
-                    deps: ['app', 'window', '$', '_', 'ajax'],
-                    singleton: true
-                })
-                .define({
-                    name: 'widgetFooterPresenter',
-                    type: require('./js/presenter.js').init,
-                    category: 'presenters',
-                    deps: ['app', 'window', '$', '_'],
-                    singleton: true
-                })
-                .define({
-                    name: 'widgetFooterWireup',
-                    type: require('./js/wireup.js').init,
-                    category: 'wireups',
-                    deps: ['app', 'window', '$', '_'],
-                    singleton: true
-                });
-        }
-    };
+  module.exports = {
+    'controllers': [
+      {
+        name: 'widgetFooterController',
+        type: require('./js/controller.js').init,
+        deps: ['app', 'window', '$', '_', 'ajax']
+      }
+    ],
+    'presenters': [
+      {
+        name: 'widgetFooterPresenter',
+        type: require('./js/presenter.js').init,
+        deps: ['app', 'window', '$', '_']
+      }
+    ],
+    'wireups': [
+      {
+        name: 'widgetFooterWireup',
+        type: require('./js/wireup.js').init,
+        deps: ['app', 'window', '$', '_']
+      }
+    ]
+  };
 })(module);
+
 },{"./js/controller.js":20,"./js/presenter.js":21,"./js/wireup.js":22}],20:[function(require,module,exports){
 (function widgetFooterControllerInit(module) {
     'use strict';
@@ -1548,35 +1543,33 @@ if(typeof module !== 'undefined' && typeof module.exports !== 'undefined') {
 })(module);
 },{}],23:[function(require,module,exports){
 (function widgetHeaderConfigure(module) {
-    'use strict';
+  'use strict';
 
-    module.exports = {
-        configure: function (container) {
-            container
-                .define({
-                    name: 'widgetHeaderController',
-                    type: require('./js/controller.js').init,
-                    category: 'controllers',
-                    deps: ['app', 'window', '$', '_', 'ajax'],
-                    singleton: true
-                })
-                .define({
-                    name: 'widgetHeaderPresenter',
-                    type: require('./js/presenter.js').init,
-                    category: 'presenters',
-                    deps: ['app', 'window', '$', '_'],
-                    singleton: true
-                })
-                .define({
-                    name: 'widgetHeaderWireup',
-                    type: require('./js/wireup.js').init,
-                    category: 'wireups',
-                    deps: ['app', 'window', '$', '_'],
-                    singleton: true
-                });
-        }
-    };
+  module.exports = {
+    'controllers': [
+      {
+        name: 'widgetHeaderController',
+        type: require('./js/controller.js').init,
+        deps: ['app', 'window', '$', '_', 'ajax']
+      }
+    ],
+    'presenters': [
+      {
+        name: 'widgetHeaderPresenter',
+        type: require('./js/presenter.js').init,
+        deps: ['app', 'window', '$', '_']
+      }
+    ],
+    'wireups': [
+      {
+        name: 'widgetHeaderWireup',
+        type: require('./js/wireup.js').init,
+        deps: ['app', 'window', '$', '_']
+      }
+    ]
+  };
 })(module);
+
 },{"./js/controller.js":24,"./js/presenter.js":25,"./js/wireup.js":26}],24:[function(require,module,exports){
 (function widgetHeaderControllerInit(module) {
     'use strict';
@@ -1667,35 +1660,33 @@ if(typeof module !== 'undefined' && typeof module.exports !== 'undefined') {
 })(module);
 },{}],27:[function(require,module,exports){
 (function widgetInfoConfigure(module) {
-    'use strict';
+  'use strict';
 
-    module.exports = {
-        configure: function (container) {
-            container
-                .define({
-                    name: 'widgetInfoController',
-                    type: require('./js/controller.js').init,
-                    category: 'controllers',
-                    deps: ['app', 'window', '$', '_', 'ajax'],
-                    singleton: true
-                })
-                .define({
-                    name: 'widgetInfoPresenter',
-                    type: require('./js/presenter.js').init,
-                    category: 'presenters',
-                    deps: ['app', 'window', '$', '_'],
-                    singleton: true
-                })
-                .define({
-                    name: 'widgetInfoWireup',
-                    type: require('./js/wireup.js').init,
-                    category: 'wireups',
-                    deps: ['app', 'window', '$', '_'],
-                    singleton: true
-                });
-        }
-    };
+  module.exports = {
+    'controllers': [
+      {
+        name: 'widgetInfoController',
+        type: require('./js/controller.js').init,
+        deps: ['app', 'window', '$', '_', 'ajax']
+      }
+    ],
+    'presenters': [
+      {
+        name: 'widgetInfoPresenter',
+        type: require('./js/presenter.js').init,
+        deps: ['app', 'window', '$', '_']
+      }
+    ],
+    'wireups': [
+      {
+        name: 'widgetInfoWireup',
+        type: require('./js/wireup.js').init,
+        deps: ['app', 'window', '$', '_']
+      }
+    ]
+  };
 })(module);
+
 },{"./js/controller.js":28,"./js/presenter.js":29,"./js/wireup.js":30}],28:[function(require,module,exports){
 (function widgetInfoControllerInit(module) {
     'use strict';
@@ -1798,35 +1789,33 @@ if(typeof module !== 'undefined' && typeof module.exports !== 'undefined') {
 })(module);
 },{}],31:[function(require,module,exports){
 (function widgetLinksConfigure(module) {
-    'use strict';
+  'use strict';
 
-    module.exports = {
-        configure: function (container) {
-            container
-                .define({
-                    name: 'widgetLinksController',
-                    type: require('./js/controller.js').init,
-                    category: 'controllers',
-                    deps: ['app', 'window', '$', '_', 'ajax'],
-                    singleton: true
-                })
-                .define({
-                    name: 'widgetLinksPresenter',
-                    type: require('./js/presenter.js').init,
-                    category: 'presenters',
-                    deps: ['app', 'window', '$', '_'],
-                    singleton: true
-                })
-                .define({
-                    name: 'widgetLinksWireup',
-                    type: require('./js/wireup.js').init,
-                    category: 'wireups',
-                    deps: ['app', 'window', '$', '_'],
-                    singleton: true
-                });
-        }
-    };
+  module.exports = {
+    'controllers': [
+      {
+        name: 'widgetLinksController',
+        type: require('./js/controller.js').init,
+        deps: ['app', 'window', '$', '_', 'ajax']
+      }
+    ],
+    'presenters': [
+      {
+        name: 'widgetLinksPresenter',
+        type: require('./js/presenter.js').init,
+        deps: ['app', 'window', '$', '_']
+      }
+    ],
+    'wireups': [
+      {
+        name: 'widgetLinksWireup',
+        type: require('./js/wireup.js').init,
+        deps: ['app', 'window', '$', '_']
+      }
+    ]
+  };
 })(module);
+
 },{"./js/controller.js":32,"./js/presenter.js":33,"./js/wireup.js":34}],32:[function(require,module,exports){
 (function widgetLinksControllerInit(module) {
     'use strict';
@@ -1919,35 +1908,34 @@ if(typeof module !== 'undefined' && typeof module.exports !== 'undefined') {
 })(module);
 },{}],35:[function(require,module,exports){
 (function widgetSocialConfigure(module) {
-    'use strict';
+  'use strict';
 
-    module.exports = {
-        configure: function (container) {
-            container
-                .define({
-                    name: 'widgetSocialController',
-                    type: require('./js/controller.js').init,
-                    category: 'controllers',
-                    deps: ['app', 'window', '$', '_', 'ajax'],
-                    singleton: true
-                })
-                .define({
-                    name: 'widgetSocialPresenter',
-                    type: require('./js/presenter.js').init,
-                    category: 'presenters',
-                    deps: ['app', 'window', '$', '_'],
-                    singleton: true
-                })
-                .define({
-                    name: 'widgetSocialWireup',
-                    type: require('./js/wireup.js').init,
-                    category: 'wireups',
-                    deps: ['app', 'window', '$', '_'],
-                    singleton: true
-                });
-        }
-    };
-})(module);
+  module.exports = {
+    'controllers': [
+      {
+        name: 'widgetSocialController',
+        type: require('./js/controller.js').init,
+        deps: ['app', 'window', '$', '_', 'ajax']
+      }
+    ],
+    'presenters': [
+      {
+        name: 'widgetSocialPresenter',
+        type: require('./js/presenter.js').init,
+        deps: ['app', 'window', '$', '_']
+      }
+    ],
+    'wireups': [
+      {
+        name: 'widgetSocialWireup',
+        type: require('./js/wireup.js').init,
+        deps: ['app', 'window', '$', '_']
+      }
+    ]
+  };
+})
+(module);
+
 },{"./js/controller.js":36,"./js/presenter.js":37,"./js/wireup.js":38}],36:[function(require,module,exports){
 (function widgetSocialControllerInit(module) {
     'use strict';
@@ -11206,14 +11194,10 @@ function hasOwnProperty(obj, prop) {
       rNewline =  /\n/g,
       rCr = /\r/g,
       rSlash = /\\/g,
-      rLineSep = /\u2028/,
-      rParagraphSep = /\u2029/;
-
-  Hogan.tags = {
-    '#': 1, '^': 2, '<': 3, '$': 4,
-    '/': 5, '!': 6, '>': 7, '=': 8, '_v': 9,
-    '{': 10, '&': 11, '_t': 12
-  };
+      tagTypes = {
+        '#': 1, '^': 2, '/': 3,  '!': 4, '>': 5,
+        '<': 6, '=': 7, '_v': 8, '{': 9, '&': 10
+      };
 
   Hogan.scan = function scan(text, delimiters) {
     var len = text.length,
@@ -11233,7 +11217,7 @@ function hasOwnProperty(obj, prop) {
 
     function addBuf() {
       if (buf.length > 0) {
-        tokens.push({tag: '_t', text: new String(buf)});
+        tokens.push(new String(buf));
         buf = '';
       }
     }
@@ -11242,8 +11226,8 @@ function hasOwnProperty(obj, prop) {
       var isAllWhitespace = true;
       for (var j = lineStart; j < tokens.length; j++) {
         isAllWhitespace =
-          (Hogan.tags[tokens[j].tag] < Hogan.tags['_v']) ||
-          (tokens[j].tag == '_t' && tokens[j].text.match(rIsWhitespace) === null);
+          (tokens[j].tag && tagTypes[tokens[j].tag] < tagTypes['_v']) ||
+          (!tokens[j].tag && tokens[j].match(rIsWhitespace) === null);
         if (!isAllWhitespace) {
           return false;
         }
@@ -11257,10 +11241,10 @@ function hasOwnProperty(obj, prop) {
 
       if (haveSeenTag && lineIsWhitespace()) {
         for (var j = lineStart, next; j < tokens.length; j++) {
-          if (tokens[j].text) {
+          if (!tokens[j].tag) {
             if ((next = tokens[j+1]) && next.tag == '>') {
               // set indent to token value
-              next.indent = tokens[j].text.toString()
+              next.indent = tokens[j].toString()
             }
             tokens.splice(j, 1);
           }
@@ -11281,7 +11265,7 @@ function hasOwnProperty(obj, prop) {
           ).split(' ');
 
       otag = delimiters[0];
-      ctag = delimiters[delimiters.length - 1];
+      ctag = delimiters[1];
 
       return closeIndex + close.length - 1;
     }
@@ -11307,7 +11291,7 @@ function hasOwnProperty(obj, prop) {
         }
       } else if (state == IN_TAG_TYPE) {
         i += otag.length - 1;
-        tag = Hogan.tags[text.charAt(i + 1)];
+        tag = tagTypes[text.charAt(i + 1)];
         tagType = tag ? text.charAt(i + 1) : '_v';
         if (tagType == '=') {
           i = changeDelimiters(text, i);
@@ -11322,7 +11306,7 @@ function hasOwnProperty(obj, prop) {
       } else {
         if (tagChange(ctag, text, i)) {
           tokens.push({tag: tagType, n: trim(buf), otag: otag, ctag: ctag,
-                       i: (tagType == '/') ? seenTag - otag.length : i + ctag.length});
+                       i: (tagType == '/') ? seenTag - ctag.length : i + otag.length});
           buf = '';
           i += ctag.length - 1;
           state = IN_TEXT;
@@ -11372,27 +11356,17 @@ function hasOwnProperty(obj, prop) {
     return true;
   }
 
-  // the tags allowed inside super templates
-  var allowedInSuper = {'_t': true, '\n': true, '$': true, '/': true};
-
   function buildTree(tokens, kind, stack, customTags) {
     var instructions = [],
         opener = null,
-        tail = null,
         token = null;
-
-    tail = stack[stack.length - 1];
 
     while (tokens.length > 0) {
       token = tokens.shift();
-
-      if (tail && tail.tag == '<' && !(token.tag in allowedInSuper)) {
-        throw new Error('Illegal content in < super tag.');
-      }
-
-      if (Hogan.tags[token.tag] <= Hogan.tags['$'] || isOpener(token, customTags)) {
+      if (token.tag == '#' || token.tag == '^' || isOpener(token, customTags)) {
         stack.push(token);
         token.nodes = buildTree(tokens, token.tag, stack, customTags);
+        instructions.push(token);
       } else if (token.tag == '/') {
         if (stack.length === 0) {
           throw new Error('Closing tag without opener: /' + token.n);
@@ -11403,11 +11377,9 @@ function hasOwnProperty(obj, prop) {
         }
         opener.end = token.i;
         return instructions;
-      } else if (token.tag == '\n') {
-        token.last = (tokens.length == 0) || (tokens[0].tag == '\n');
+      } else {
+        instructions.push(token);
       }
-
-      instructions.push(token);
     }
 
     if (stack.length > 0) {
@@ -11434,177 +11406,114 @@ function hasOwnProperty(obj, prop) {
     }
   }
 
-  function stringifySubstitutions(obj) {
-    var items = [];
-    for (var key in obj) {
-      items.push('"' + esc(key) + '": function(c,p,t,i) {' + obj[key] + '}');
-    }
-    return "{ " + items.join(",") + " }";
-  }
-
-  function stringifyPartials(codeObj) {
-    var partials = [];
-    for (var key in codeObj.partials) {
-      partials.push('"' + esc(key) + '":{name:"' + esc(codeObj.partials[key].name) + '", ' + stringifyPartials(codeObj.partials[key]) + "}");
-    }
-    return "partials: {" + partials.join(",") + "}, subs: " + stringifySubstitutions(codeObj.subs);
-  }
-
-  Hogan.stringify = function(codeObj, text, options) {
-    return "{code: function (c,p,i) { " + Hogan.wrapMain(codeObj.code) + " }," + stringifyPartials(codeObj) +  "}";
-  }
-
-  var serialNo = 0;
-  Hogan.generate = function(tree, text, options) {
-    serialNo = 0;
-    var context = { code: '', subs: {}, partials: {} };
-    Hogan.walk(tree, context);
-
+  Hogan.generate = function (tree, text, options) {
+    var code = 'var _=this;_.b(i=i||"");' + walk(tree) + 'return _.fl();';
     if (options.asString) {
-      return this.stringify(context, text, options);
+      return 'function(c,p,i){' + code + ';}';
     }
 
-    return this.makeTemplate(context, text, options);
-  }
-
-  Hogan.wrapMain = function(code) {
-    return 'var t=this;t.b(i=i||"");' + code + 'return t.fl();';
-  }
-
-  Hogan.template = Hogan.Template;
-
-  Hogan.makeTemplate = function(codeObj, text, options) {
-    var template = this.makePartials(codeObj);
-    template.code = new Function('c', 'p', 'i', this.wrapMain(codeObj.code));
-    return new this.template(template, text, this, options);
-  }
-
-  Hogan.makePartials = function(codeObj) {
-    var key, template = {subs: {}, partials: codeObj.partials, name: codeObj.name};
-    for (key in template.partials) {
-      template.partials[key] = this.makePartials(template.partials[key]);
-    }
-    for (key in codeObj.subs) {
-      template.subs[key] = new Function('c', 'p', 't', 'i', codeObj.subs[key]);
-    }
-    return template;
+    return new Hogan.Template(new Function('c', 'p', 'i', code), text, Hogan, options);
   }
 
   function esc(s) {
     return s.replace(rSlash, '\\\\')
             .replace(rQuot, '\\\"')
             .replace(rNewline, '\\n')
-            .replace(rCr, '\\r')
-            .replace(rLineSep, '\\u2028')
-            .replace(rParagraphSep, '\\u2029');
+            .replace(rCr, '\\r');
   }
 
   function chooseMethod(s) {
     return (~s.indexOf('.')) ? 'd' : 'f';
   }
 
-  function createPartial(node, context) {
-    var prefix = "<" + (context.prefix || "");
-    var sym = prefix + node.n + serialNo++;
-    context.partials[sym] = {name: node.n, partials: {}};
-    context.code += 't.b(t.rp("' +  esc(sym) + '",c,p,"' + (node.indent || '') + '"));';
-    return sym;
-  }
-
-  Hogan.codegen = {
-    '#': function(node, context) {
-      context.code += 'if(t.s(t.' + chooseMethod(node.n) + '("' + esc(node.n) + '",c,p,1),' +
-                      'c,p,0,' + node.i + ',' + node.end + ',"' + node.otag + " " + node.ctag + '")){' +
-                      't.rs(c,p,' + 'function(c,p,t){';
-      Hogan.walk(node.nodes, context);
-      context.code += '});c.pop();}';
-    },
-
-    '^': function(node, context) {
-      context.code += 'if(!t.s(t.' + chooseMethod(node.n) + '("' + esc(node.n) + '",c,p,1),c,p,1,0,0,"")){';
-      Hogan.walk(node.nodes, context);
-      context.code += '};';
-    },
-
-    '>': createPartial,
-    '<': function(node, context) {
-      var ctx = {partials: {}, code: '', subs: {}, inPartial: true};
-      Hogan.walk(node.nodes, ctx);
-      var template = context.partials[createPartial(node, context)];
-      template.subs = ctx.subs;
-      template.partials = ctx.partials;
-    },
-
-    '$': function(node, context) {
-      var ctx = {subs: {}, code: '', partials: context.partials, prefix: node.n};
-      Hogan.walk(node.nodes, ctx);
-      context.subs[node.n] = ctx.code;
-      if (!context.inPartial) {
-        context.code += 't.sub("' + esc(node.n) + '",c,p,i);';
+  function walk(tree) {
+    var code = '';
+    for (var i = 0, l = tree.length; i < l; i++) {
+      var tag = tree[i].tag;
+      if (tag == '#') {
+        code += section(tree[i].nodes, tree[i].n, chooseMethod(tree[i].n),
+                        tree[i].i, tree[i].end, tree[i].otag + " " + tree[i].ctag);
+      } else if (tag == '^') {
+        code += invertedSection(tree[i].nodes, tree[i].n,
+                                chooseMethod(tree[i].n));
+      } else if (tag == '<' || tag == '>') {
+        code += partial(tree[i]);
+      } else if (tag == '{' || tag == '&') {
+        code += tripleStache(tree[i].n, chooseMethod(tree[i].n));
+      } else if (tag == '\n') {
+        code += text('"\\n"' + (tree.length-1 == i ? '' : ' + i'));
+      } else if (tag == '_v') {
+        code += variable(tree[i].n, chooseMethod(tree[i].n));
+      } else if (tag === undefined) {
+        code += text('"' + esc(tree[i]) + '"');
       }
-    },
-
-    '\n': function(node, context) {
-      context.code += write('"\\n"' + (node.last ? '' : ' + i'));
-    },
-
-    '_v': function(node, context) {
-      context.code += 't.b(t.v(t.' + chooseMethod(node.n) + '("' + esc(node.n) + '",c,p,0)));';
-    },
-
-    '_t': function(node, context) {
-      context.code += write('"' + esc(node.text) + '"');
-    },
-
-    '{': tripleStache,
-
-    '&': tripleStache
-  }
-
-  function tripleStache(node, context) {
-    context.code += 't.b(t.t(t.' + chooseMethod(node.n) + '("' + esc(node.n) + '",c,p,0)));';
-  }
-
-  function write(s) {
-    return 't.b(' + s + ');';
-  }
-
-  Hogan.walk = function(nodelist, context) {
-    var func;
-    for (var i = 0, l = nodelist.length; i < l; i++) {
-      func = Hogan.codegen[nodelist[i].tag];
-      func && func(nodelist[i], context);
     }
-    return context;
+    return code;
+  }
+
+  function section(nodes, id, method, start, end, tags) {
+    return 'if(_.s(_.' + method + '("' + esc(id) + '",c,p,1),' +
+           'c,p,0,' + start + ',' + end + ',"' + tags + '")){' +
+           '_.rs(c,p,' +
+           'function(c,p,_){' +
+           walk(nodes) +
+           '});c.pop();}';
+  }
+
+  function invertedSection(nodes, id, method) {
+    return 'if(!_.s(_.' + method + '("' + esc(id) + '",c,p,1),c,p,1,0,0,"")){' +
+           walk(nodes) +
+           '};';
+  }
+
+  function partial(tok) {
+    return '_.b(_.rp("' +  esc(tok.n) + '",c,p,"' + (tok.indent || '') + '"));';
+  }
+
+  function tripleStache(id, method) {
+    return '_.b(_.t(_.' + method + '("' + esc(id) + '",c,p,0)));';
+  }
+
+  function variable(id, method) {
+    return '_.b(_.v(_.' + method + '("' + esc(id) + '",c,p,0)));';
+  }
+
+  function text(id) {
+    return '_.b(' + id + ');';
   }
 
   Hogan.parse = function(tokens, text, options) {
     options = options || {};
     return buildTree(tokens, '', [], options.sectionTags || []);
-  }
+  },
 
   Hogan.cache = {};
 
-  Hogan.cacheKey = function(text, options) {
-    return [text, !!options.asString, !!options.disableLambda, options.delimiters, !!options.modelGet].join('||');
-  }
-
   Hogan.compile = function(text, options) {
+    // options
+    //
+    // asString: false (default)
+    //
+    // sectionTags: [{o: '_foo', c: 'foo'}]
+    // An array of object with o and c fields that indicate names for custom
+    // section tags. The example above allows parsing of {{_foo}}{{/foo}}.
+    //
+    // delimiters: A string that overrides the default delimiters.
+    // Example: "<% %>"
+    //
     options = options || {};
-    var key = Hogan.cacheKey(text, options);
-    var template = this.cache[key];
 
-    if (template) {
-      var partials = template.partials;
-      for (var name in partials) {
-        delete partials[name].instance;
-      }
-      return template;
+    var key = text + '||' + !!options.asString;
+
+    var t = this.cache[key];
+
+    if (t) {
+      return t;
     }
 
-    template = this.generate(this.parse(this.scan(text, options.delimiters), text, options), text, options);
-    return this.cache[key] = template;
-  }
+    t = this.generate(this.parse(this.scan(text, options.delimiters), text, options), text, options);
+    return this.cache[key] = t;
+  };
 })(typeof exports !== 'undefined' ? exports : Hogan);
 
 },{}],76:[function(require,module,exports){
@@ -11627,9 +11536,7 @@ function hasOwnProperty(obj, prop) {
 
 var Hogan = require('./compiler');
 Hogan.Template = require('./template').Template;
-Hogan.template = Hogan.Template;
-module.exports = Hogan;
-
+module.exports = Hogan; 
 },{"./compiler":75,"./template":77}],77:[function(require,module,exports){
 /*
  *  Copyright 2011 Twitter, Inc.
@@ -11648,16 +11555,13 @@ module.exports = Hogan;
 
 var Hogan = {};
 
-(function (Hogan) {
-  Hogan.Template = function (codeObj, text, compiler, options) {
-    codeObj = codeObj || {};
-    this.r = codeObj.code || this.r;
+(function (Hogan, useArrayBuffer) {
+  Hogan.Template = function (renderFunc, text, compiler, options) {
+    this.r = renderFunc || this.r;
     this.c = compiler;
-    this.options = options || {};
+    this.options = options;
     this.text = text || '';
-    this.partials = codeObj.partials || {};
-    this.subs = codeObj.subs || {};
-    this.buf = '';
+    this.buf = (useArrayBuffer) ? [] : '';
   }
 
   Hogan.Template.prototype = {
@@ -11679,51 +11583,16 @@ var Hogan = {};
       return this.r(context, partials, indent);
     },
 
-    // ensurePartial
-    ep: function(symbol, partials) {
-      var partial = this.partials[symbol];
+    // tries to find a partial in the curent scope and render it
+    rp: function(name, context, partials, indent) {
+      var partial = partials[name];
 
-      // check to see that if we've instantiated this partial before
-      var template = partials[partial.name];
-      if (partial.instance && partial.base == template) {
-        return partial.instance;
-      }
-
-      if (typeof template == 'string') {
-        if (!this.c) {
-          throw new Error("No compiler available.");
-        }
-        template = this.c.compile(template, this.options);
-      }
-
-      if (!template) {
-        return null;
-      }
-
-      // We use this to check whether the partials dictionary has changed
-      this.partials[symbol].base = template;
-
-      if (partial.subs) {
-        // Make sure we consider parent template now
-        if (!partials.stackText) partials.stackText = {};
-        for (key in partial.subs) {
-          if (!partials.stackText[key]) {
-            partials.stackText[key] = (this.activeSub !== undefined && partials.stackText[this.activeSub]) ? partials.stackText[this.activeSub] : this.text;
-          }
-        }
-        template = createSpecializedPartial(template, partial.subs, partial.partials,
-          this.stackSubs, this.stackPartials, partials.stackText);
-      }
-      this.partials[symbol].instance = template;
-
-      return template;
-    },
-
-    // tries to find a partial in the current scope and render it
-    rp: function(symbol, context, partials, indent) {
-      var partial = this.ep(symbol, partials);
       if (!partial) {
         return '';
+      }
+
+      if (this.c && typeof partial == 'string') {
+        partial = this.c.compile(partial, this.options);
       }
 
       return partial.ri(context, partials, indent);
@@ -11754,10 +11623,10 @@ var Hogan = {};
       }
 
       if (typeof val == 'function') {
-        val = this.ms(val, ctx, partials, inverted, start, end, tags);
+        val = this.ls(val, ctx, partials, inverted, start, end, tags);
       }
 
-      pass = !!val;
+      pass = (val === '') || !!val;
 
       if (!inverted && pass && ctx) {
         ctx.push((typeof val == 'object') ? val : ctx[ctx.length - 1]);
@@ -11768,23 +11637,20 @@ var Hogan = {};
 
     // find values with dotted names
     d: function(key, ctx, partials, returnFound) {
-      var found,
-          names = key.split('.'),
+      var names = key.split('.'),
           val = this.f(names[0], ctx, partials, returnFound),
-          doModelGet = this.options.modelGet,
           cx = null;
 
       if (key === '.' && isArray(ctx[ctx.length - 2])) {
-        val = ctx[ctx.length - 1];
-      } else {
-        for (var i = 1; i < names.length; i++) {
-          found = findInScope(names[i], val, doModelGet);
-          if (found !== undefined) {
-            cx = val;
-            val = found;
-          } else {
-            val = '';
-          }
+        return ctx[ctx.length - 1];
+      }
+
+      for (var i = 1; i < names.length; i++) {
+        if (val && typeof val == 'object' && names[i] in val) {
+          cx = val;
+          val = val[names[i]];
+        } else {
+          val = '';
         }
       }
 
@@ -11794,7 +11660,7 @@ var Hogan = {};
 
       if (!returnFound && typeof val == 'function') {
         ctx.push(cx);
-        val = this.mv(val, ctx, partials);
+        val = this.lv(val, ctx, partials);
         ctx.pop();
       }
 
@@ -11805,13 +11671,12 @@ var Hogan = {};
     f: function(key, ctx, partials, returnFound) {
       var val = false,
           v = null,
-          found = false,
-          doModelGet = this.options.modelGet;
+          found = false;
 
       for (var i = ctx.length - 1; i >= 0; i--) {
         v = ctx[i];
-        val = findInScope(key, v, doModelGet);
-        if (val !== undefined) {
+        if (v && typeof v == 'object' && key in v) {
+          val = v[key];
           found = true;
           break;
         }
@@ -11822,134 +11687,75 @@ var Hogan = {};
       }
 
       if (!returnFound && typeof val == 'function') {
-        val = this.mv(val, ctx, partials);
+        val = this.lv(val, ctx, partials);
       }
 
       return val;
     },
 
     // higher order templates
-    ls: function(func, cx, partials, text, tags) {
-      var oldTags = this.options.delimiters;
-
-      this.options.delimiters = tags;
-      this.b(this.ct(coerceToString(func.call(cx, text)), cx, partials));
-      this.options.delimiters = oldTags;
-
+    ho: function(val, cx, partials, text, tags) {
+      var compiler = this.c;
+      var options = this.options;
+      options.delimiters = tags;
+      var text = val.call(cx, text);
+      text = (text == null) ? String(text) : text.toString();
+      this.b(compiler.compile(text, options).render(cx, partials));
       return false;
     },
 
-    // compile text
-    ct: function(text, cx, partials) {
-      if (this.options.disableLambda) {
-        throw new Error('Lambda features disabled.');
-      }
-      return this.c.compile(text, this.options).render(cx, partials);
-    },
-
     // template result buffering
-    b: function(s) { this.buf += s; },
+    b: (useArrayBuffer) ? function(s) { this.buf.push(s); } :
+                          function(s) { this.buf += s; },
+    fl: (useArrayBuffer) ? function() { var r = this.buf.join(''); this.buf = []; return r; } :
+                           function() { var r = this.buf; this.buf = ''; return r; },
 
-    fl: function() { var r = this.buf; this.buf = ''; return r; },
+    // lambda replace section
+    ls: function(val, ctx, partials, inverted, start, end, tags) {
+      var cx = ctx[ctx.length - 1],
+          t = null;
 
-    // method replace section
-    ms: function(func, ctx, partials, inverted, start, end, tags) {
-      var textSource,
-          cx = ctx[ctx.length - 1],
-          result = func.call(cx);
+      if (!inverted && this.c && val.length > 0) {
+        return this.ho(val, cx, partials, this.text.substring(start, end), tags);
+      }
 
-      if (typeof result == 'function') {
+      t = val.call(cx);
+
+      if (typeof t == 'function') {
         if (inverted) {
           return true;
-        } else {
-          textSource = (this.activeSub && this.subsText && this.subsText[this.activeSub]) ? this.subsText[this.activeSub] : this.text;
-          return this.ls(result, cx, partials, textSource.substring(start, end), tags);
+        } else if (this.c) {
+          return this.ho(t, cx, partials, this.text.substring(start, end), tags);
         }
       }
 
-      return result;
+      return t;
     },
 
-    // method replace variable
-    mv: function(func, ctx, partials) {
+    // lambda replace variable
+    lv: function(val, ctx, partials) {
       var cx = ctx[ctx.length - 1];
-      var result = func.call(cx);
+      var result = val.call(cx);
 
       if (typeof result == 'function') {
-        return this.ct(coerceToString(result.call(cx)), cx, partials);
+        result = coerceToString(result.call(cx));
+        if (this.c && ~result.indexOf("{\u007B")) {
+          return this.c.compile(result, this.options).render(cx, partials);
+        }
       }
 
-      return result;
-    },
-
-    sub: function(name, context, partials, indent) {
-      var f = this.subs[name];
-      if (f) {
-        this.activeSub = name;
-        f(context, partials, this, indent);
-        this.activeSub = false;
-      }
+      return coerceToString(result);
     }
 
   };
 
-  //Find a key in an object
-  function findInScope(key, scope, doModelGet) {
-    var val;
-
-    if (scope && typeof scope == 'object') {
-
-      if (scope[key] !== undefined) {
-        val = scope[key];
-
-      // try lookup with get for backbone or similar model data
-      } else if (doModelGet && scope.get && typeof scope.get == 'function') {
-        val = scope.get(key);
-      }
-    }
-
-    return val;
-  }
-
-  function createSpecializedPartial(instance, subs, partials, stackSubs, stackPartials, stackText) {
-    function PartialTemplate() {};
-    PartialTemplate.prototype = instance;
-    function Substitutions() {};
-    Substitutions.prototype = instance.subs;
-    var key;
-    var partial = new PartialTemplate();
-    partial.subs = new Substitutions();
-    partial.subsText = {};  //hehe. substext.
-    partial.buf = '';
-
-    stackSubs = stackSubs || {};
-    partial.stackSubs = stackSubs;
-    partial.subsText = stackText;
-    for (key in subs) {
-      if (!stackSubs[key]) stackSubs[key] = subs[key];
-    }
-    for (key in stackSubs) {
-      partial.subs[key] = stackSubs[key];
-    }
-
-    stackPartials = stackPartials || {};
-    partial.stackPartials = stackPartials;
-    for (key in partials) {
-      if (!stackPartials[key]) stackPartials[key] = partials[key];
-    }
-    for (key in stackPartials) {
-      partial.partials[key] = stackPartials[key];
-    }
-
-    return partial;
-  }
-
   var rAmp = /&/g,
       rLt = /</g,
       rGt = />/g,
-      rApos = /\'/g,
+      rApos =/\'/g,
       rQuot = /\"/g,
-      hChars = /[&<>\"\']/;
+      hChars =/[&<>\"\']/;
+
 
   function coerceToString(val) {
     return String((val === null || val === undefined) ? '' : val);
@@ -11959,10 +11765,10 @@ var Hogan = {};
     str = coerceToString(str);
     return hChars.test(str) ?
       str
-        .replace(rAmp, '&amp;')
-        .replace(rLt, '&lt;')
-        .replace(rGt, '&gt;')
-        .replace(rApos, '&#39;')
+        .replace(rAmp,'&amp;')
+        .replace(rLt,'&lt;')
+        .replace(rGt,'&gt;')
+        .replace(rApos,'&#39;')
         .replace(rQuot, '&quot;') :
       str;
   }
@@ -11972,6 +11778,7 @@ var Hogan = {};
   };
 
 })(typeof exports !== 'undefined' ? exports : Hogan);
+
 
 },{}],78:[function(require,module,exports){
 (function (module){
